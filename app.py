@@ -20,6 +20,7 @@ hop_s = win_s // 2          # hop size
 images_url = 'https://s3.amazonaws.com/hiphy/images/'
 song_url = 'https://s3.amazonaws.com/hiphy/song/jason.wav'
 ffmpeg_url = 'https://fe13pn0b30.execute-api.us-west-2.amazonaws.com/dev/v1/convert'
+# ffmpeg_url = 'http://7f5fd0b2.ngrok.io/v1/convert'
 
 session = boto3.Session(
     aws_access_key_id=os.environ.get('AWS_SERVER_PUBLIC_KEY'),
@@ -63,33 +64,39 @@ def get_images(images_url):
 
 def create_instructions(beats, images_url):
     images = get_images(images_url)
+    instructions = []
     print(images)
     images = [
         i for i in images if i.endswith('.jpg') or i.endswith('.png')
     ]
     random.shuffle(images)
-    with open('images.txt', 'w') as image_file:
-        before = float(0.000)
-        j = 0
-        for i, e in enumerate(beats):
-            if j >= len(images):
-                j = 0
-            duration = float(float(e) - before)
-            duration = "{0:.2f}".format(duration)
-            before = float(e)
-            image_file.write('file {}\n'.format(images[j]))
-            image_file.write('duration {}\n'.format(duration))
-            j = j + 1
+
+    before = float(0.000)
+    j = 0
+    for i, e in enumerate(beats):
+        if j >= len(images):
+            j = 0
+        duration = float(float(e) - before)
+        duration = "{0:.2f}".format(duration)
+        before = float(e)
+        image = images[j]
+        if '/' in image:
+            image = image.split('/')[-1]
+        instructions.append('file {}'.format(image))
+        instructions.append('duration {}'.format(duration))
+        j = j + 1
+    return instructions
 
 
-def send_to_ffmpeg():
-    files = {'instructions': open('images.txt', 'rb')}
+def send_to_ffmpeg(instructions):
+
     values = {
-        'images_s3_url': images_url,
-        'song_s3_url': song_url
+        "images_s3_url": images_url,
+        "song_s3_url": song_url,
+        "instructions": instructions
     }
 
-    requests.post(ffmpeg_url, files=files, json=values)
+    requests.post(ffmpeg_url, json=values)
 
 
 def get_beats(path, params=None):
@@ -150,8 +157,8 @@ def not_found(error):
 def audio():
     song = download_song(song_url)
     beats = get_beats(song)
-    create_instructions(beats, images_url)
-    send_to_ffmpeg()
+    instructions = create_instructions(beats, images_url)
+    send_to_ffmpeg(instructions)
     response = build_response({'beats': beats}, 200)
 
     return response
@@ -160,3 +167,4 @@ def audio():
 
 if __name__ == '__main__':
     app.run()
+    # app.run(host='0.0.0.0', port=5001)
