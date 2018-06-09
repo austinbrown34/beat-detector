@@ -1,7 +1,8 @@
-from flask import Flask, jsonify, make_response, request, abort, Response, render_template, flash
-from flask_wtf import Form
+from flask import Flask, jsonify, make_response, request, abort, Response, render_template, flash, redirect, url_for, send_from_directory
+from flask_wtf import FlaskForm
+from werkzeug import secure_filename
 from flask_wtf.file import FileField
-from tools import s3_upload
+from tools import s3_uploads, s3_upload
 import json
 import os
 import subprocess
@@ -152,16 +153,35 @@ def build_response(resp_dict, status_code):
     return response
 
 
-class UploadForm(Form):
-    example = FileField('Example File')
+class UploadForm(FlaskForm):
+    print("upload form")
+    audio = FileField(
+        'Example File',)
+    example = FileField(
+        'Example File',
+        render_kw={'multiple': True},
+        )
 
 
 @app.route('/upload', methods=['POST', 'GET'])
 def upload_page():
+    print("upload page")
     form = UploadForm()
+    print("about to validate")
     if form.validate_on_submit():
-        output = s3_upload(form.example)
-        flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
+        print("form validated")
+        print(form.example.data)
+        print(request.files.getlist("example"))
+        # print(request.FILES[form.example].read())
+        out = s3_upload(form.audio)
+        outputs = s3_uploads(request.files.getlist("example"))
+        flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=out))
+        for output in outputs:
+            flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
+        song = download_song('https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], app.config["S3_AUDIO_UPLOAD_DIRECTORY"], out))
+        beats = get_beats(song)
+        instructions = create_instructions(beats, 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], app.config["S3_UPLOAD_DIRECTORY"]))
+        send_to_ffmpeg(instructions)
     return render_template('example.html', form=form)
 
 
