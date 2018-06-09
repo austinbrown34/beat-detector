@@ -1,4 +1,7 @@
-from flask import Flask, jsonify, make_response, request, abort, Response
+from flask import Flask, jsonify, make_response, request, abort, Response, render_template, flash
+from flask_wtf import Form
+from flask_wtf.file import FileField
+from tools import s3_upload
 import json
 import os
 import subprocess
@@ -12,6 +15,7 @@ import requests
 
 
 app = Flask(__name__)
+app.config.from_object('config')
 
 
 win_s = 512                 # fft size
@@ -146,6 +150,19 @@ def get_beats(path, params=None):
 def build_response(resp_dict, status_code):
     response = Response(json.dumps(resp_dict), status_code)
     return response
+
+
+class UploadForm(Form):
+    example = FileField('Example File')
+
+
+@app.route('/upload', methods=['POST', 'GET'])
+def upload_page():
+    form = UploadForm()
+    if form.validate_on_submit():
+        output = s3_upload(form.example)
+        flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
+    return render_template('example.html', form=form)
 
 
 @app.errorhandler(404)
