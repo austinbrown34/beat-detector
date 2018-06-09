@@ -6,6 +6,9 @@ import random
 from aubio import source, tempo, onset
 from numpy import median, diff
 from pydub import AudioSegment
+import boto3
+import botocore
+import requests
 
 
 app = Flask(__name__)
@@ -14,6 +17,75 @@ app = Flask(__name__)
 win_s = 512                 # fft size
 hop_s = win_s // 2          # hop size
 
+images_url = 'https://s3.amazonaws.com/hiphy/images/'
+song_url = 'https://s3.amazonaws.com/hiphy/song/jason.wav'
+ffmpeg_url = 'https://fe13pn0b30.execute-api.us-west-2.amazonaws.com/dev/v1/convert'
+
+session = boto3.Session(
+    aws_access_key_id=os.environ.get('AWS_SERVER_PUBLIC_KEY'),
+    aws_secret_access_key=os.environ.get('AWS_SERVER_SECRET_KEY'),
+)
+s3 = session.resource('s3')
+
+
+def download_song(song_url):
+    # download song
+    bucket = song_url.split('.com/')[1].split('/')[0]
+    song = song_url.split('.com/{}/'.format(bucket))[1]
+    file_name = song_url.split('/')[-1]
+    try:
+        try:
+            os.remove('song.wav')
+        except OSError:
+            pass
+        s3.Bucket(bucket).download_file(song, file_name)
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            print("The object does not exist.")
+        else:
+            raise
+    return file_name
+
+
+def get_images(images_url):
+    # return list of image file names
+    bucket = images_url.split('.com/')[1].split('/')[0]
+    dist = images_url.split('.com/{}/'.format(bucket))
+    images = []
+    my_bucket = s3.Bucket(bucket)
+    for object_summary in my_bucket.objects.filter(Prefix="{}/".format(dist)):
+        images.append(object_summary.key)
+    return images
+
+
+def create_instructions(beats, images_url):
+    images = get_images(images_url)
+    images = [
+        i for i in images if i.endswith('.jpg') or i.endswith('.png')
+    ]
+    random.shuffle(images)
+    with open('images.txt', 'w') as image_file:
+        before = float(0.000)
+        j = 0
+        for i, e in enumerate(beats):
+            if j >= len(images):
+                j = 0
+            duration = float(float(e) - before)
+            duration = "{0:.2f}".format(duration)
+            before = float(e)
+            image_file.write('file {}\n'.format(images[j]))
+            image_file.write('duration {}\n'.format(duration))
+            j = j + 1
+
+
+def send_to_ffmpeg():
+    files = {'instructions': open('images.txt', 'rb')}
+    values = {
+        'images_s3_url': images_url,
+        'song_s3_url': song_url
+    }
+
+    requests.post(ffmpeg_url, files=files, data=values)
 
 
 def get_beats(path, params=None):
@@ -23,45 +95,29 @@ def get_beats(path, params=None):
     """
     if params is None:
         params = {}
-    # default:
     samplerate, win_s, hop_s = 44100, 1024, 512
     if 'mode' in params:
         if params.mode in ['super-fast']:
-            # super fast
             samplerate, win_s, hop_s = 4000, 128, 64
         elif params.mode in ['fast']:
-            # fast
             samplerate, win_s, hop_s = 8000, 512, 128
         elif params.mode in ['default']:
             pass
         else:
             print("unknown mode")
-            # print("unknown mode {:s}".format(params.mode))
-    # manual settings
     if 'samplerate' in params:
         samplerate = params.samplerate
     if 'win_s' in params:
         win_s = params.win_s
     if 'hop_s' in params:
         hop_s = params.hop_s
-
-    # song = AudioSegment.from_wav(path)
-    # new = song.low_pass_filter(.5)
-    # new.export("mashup.wav", format="wav")
     s = source(path, samplerate, hop_s)
     samplerate = s.samplerate
-    tem = tempo("specdiff", win_s, hop_s, samplerate)
     hop_s = int(win_s // 1.001)
     ns = source(path, samplerate, hop_s)
-
     nsamplerate = ns.samplerate
-
-
     o = onset("default", win_s, hop_s, nsamplerate)
-
-    # List of beats, in samples
     beats = []
-    # Total number of frames read
     total_frames = 0
 
     while True:
@@ -70,101 +126,10 @@ def get_beats(path, params=None):
         if is_beat:
             this_beat = o.get_last_s()
             beats.append(this_beat)
-        # if is_beat:
-        #     this_beat = o.get_last_s()
-        #     samples, read = s()
-        #     is_actual_beat = tem(samples)
-        #     if is_actual_beat:
-        #     # print("BEAT!")
-        #         print(this_beat)
-        #         print("BEAT!")
-        #         print(this_beat)
-        #         beats.append(this_beat)
-            # print(o.get_confidence())
-            # if o.get_confidence() > 0:
-            #     print("BEAT!")
-            #     print(this_beat)
-            #     beats.append(this_beat)
-            #     outstr = "read %.2fs" % (total_frames / float(samplerate))
-            #     print ("seconds:")
-            #     print (outstr)
-            # beats.append(this_beat)
-            #if o.get_confidence() > .2 and len(beats) > 2.:
-            #    break
         total_frames += nread
         if nread < hop_s:
             break
     return beats
-
-
-def get_file_bpm(path, params=None):
-    """ Calculate the beats per minute (bpm) of a given file.
-        path: path to the file
-        param: dictionary of parameters
-    """
-    if params is None:
-        params = {}
-    # default:
-    samplerate, win_s, hop_s = 44100, 1024, 512
-    if 'mode' in params:
-        if params.mode in ['super-fast']:
-            # super fast
-            samplerate, win_s, hop_s = 4000, 128, 64
-        elif params.mode in ['fast']:
-            # fast
-            samplerate, win_s, hop_s = 8000, 512, 128
-        elif params.mode in ['default']:
-            pass
-        else:
-            print("unknown mode")
-            # print("unknown mode {:s}".format(params.mode))
-    # manual settings
-    if 'samplerate' in params:
-        samplerate = params.samplerate
-    if 'win_s' in params:
-        win_s = params.win_s
-    if 'hop_s' in params:
-        hop_s = params.hop_s
-
-    s = source(path, samplerate, hop_s)
-    samplerate = s.samplerate
-    o = tempo("specdiff", win_s, hop_s, samplerate)
-    # List of beats, in samples
-    beats = []
-    # Total number of frames read
-    total_frames = 0
-
-    while True:
-        samples, read = s()
-        is_beat = o(samples)
-        if is_beat:
-            this_beat = o.get_last_s()
-
-
-            print(o.get_confidence())
-            if o.get_confidence() > .5:
-                print("BEAT!")
-                print(this_beat)
-                beats.append(this_beat)
-
-            #if o.get_confidence() > .2 and len(beats) > 2.:
-            #    break
-        total_frames += read
-        if read < hop_s:
-            break
-
-    def beats_to_bpm(beats, path):
-        # if enough beats are found, convert to periods then to bpm
-        if len(beats) > 1:
-            if len(beats) < 4:
-                print("few beats found in {:s}".format(path))
-            bpms = 60./diff(beats)
-            return median(bpms)
-        else:
-            print("not enough beats found in {:s}".format(path))
-            return 0
-
-    return beats_to_bpm(beats, path)
 
 
 def build_response(resp_dict, status_code):
@@ -179,7 +144,10 @@ def not_found(error):
 
 @app.route('/')
 def audio():
-    beats = get_beats('jason.wav')
+    song = download_song(song_url)
+    beats = get_beats(song)
+    create_instructions(beats, images_url)
+    send_to_ffmpeg()
     response = build_response({'beats': beats}, 200)
 
     return response
