@@ -89,7 +89,7 @@ def send_to_ffmpeg():
         'song_s3_url': song_url
     }
 
-    requests.post(ffmpeg_url, files=files, data=values)
+    requests.post(ffmpeg_url, files=files, json=values)
 
 
 def get_beats(path, params=None):
