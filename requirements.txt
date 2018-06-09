@@ -1,4 +1,5 @@
 aubio==0.4.6
+boto==2.48.0
 boto3==1.7.35
 botocore==1.10.35
 certifi==2018.4.16
