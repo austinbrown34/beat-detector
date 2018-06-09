@@ -50,16 +50,20 @@ def download_song(song_url):
 def get_images(images_url):
     # return list of image file names
     bucket = images_url.split('.com/')[1].split('/')[0]
-    dist = images_url.split('.com/{}/'.format(bucket))
+    dist = images_url.split('.com/{}/'.format(bucket))[1]
     images = []
     my_bucket = s3.Bucket(bucket)
-    for object_summary in my_bucket.objects.filter(Prefix="{}/".format(dist)):
+    print(bucket)
+    print(dist)
+    for object_summary in my_bucket.objects.filter(Prefix="{}".format(dist)):
+        print(object_summary)
         images.append(object_summary.key)
     return images
 
 
 def create_instructions(beats, images_url):
     images = get_images(images_url)
+    print(images)
     images = [
         i for i in images if i.endswith('.jpg') or i.endswith('.png')
     ]
