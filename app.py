@@ -7,8 +7,6 @@ from aubio import source, tempo, onset
 from numpy import median, diff
 from pydub import AudioSegment
 
-from zappa.async import task
-
 
 app = Flask(__name__)
 
