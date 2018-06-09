@@ -1,3 +1,4 @@
+aubio==0.4.6
 click==6.7
 Flask==1.0.2
 gunicorn==19.8.1
@@ -6,7 +7,5 @@ Jinja2==2.10
 MarkupSafe==1.0
 mido==1.2.8
 numpy==1.14.3
-PyAudio==0.2.11
 pydub==0.22.0
 Werkzeug==0.14.1
-aubio==0.4.6
