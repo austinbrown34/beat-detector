@@ -45,14 +45,14 @@ def get_beats(path, params=None):
     if 'hop_s' in params:
         hop_s = params.hop_s
 
-    song = AudioSegment.from_wav(path)
-    new = song.low_pass_filter(.5)
-    new.export("mashup.wav", format="wav")
-    s = source("mashup.wav", samplerate, hop_s)
+    # song = AudioSegment.from_wav(path)
+    # new = song.low_pass_filter(.5)
+    # new.export("mashup.wav", format="wav")
+    s = source(path, samplerate, hop_s)
     samplerate = s.samplerate
     tem = tempo("specdiff", win_s, hop_s, samplerate)
     hop_s = int(win_s // 1.001)
-    ns = source("mashup.wav", samplerate, hop_s)
+    ns = source(path, samplerate, hop_s)
 
     nsamplerate = ns.samplerate
 
