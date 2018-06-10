@@ -93,7 +93,7 @@ def create_instructions(beats, images_url):
     return instructions
 
 
-def send_to_ffmpeg(instructions):
+def send_to_ffmpeg(images_url, song_url, instructions):
 
     values = {
         "images_s3_url": images_url,
@@ -178,10 +178,12 @@ def upload_page():
         flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=out))
         for output in outputs:
             flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
-        song = download_song('https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], app.config["S3_AUDIO_UPLOAD_DIRECTORY"], out))
+        song_url = 'https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], app.config["S3_AUDIO_UPLOAD_DIRECTORY"], out)
+        song = download_song(song_url)
         beats = get_beats(song)
-        instructions = create_instructions(beats, 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], app.config["S3_UPLOAD_DIRECTORY"]))
-        send_to_ffmpeg(instructions)
+        images_url = 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], app.config["S3_UPLOAD_DIRECTORY"])
+        instructions = create_instructions(beats, images_url)
+        send_to_ffmpeg(images_url, song_url, instructions)
     return render_template('example.html', form=form)
 
 
