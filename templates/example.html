@@ -1,21 +1,232 @@
-<!DOCTYPE html>
-<HEAD>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-</HEAD>
+<!DOCTYPE HTML>
+<html>
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul class=flashes>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
+<head>
+    <title>Hiphy</title>
+    <!-- meta info -->
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <meta name="keywords" content="Hiphy" />
+    <meta name="description" content="Hiphy">
+    <meta name="author" content="Austin Brown">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,300' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300' rel='stylesheet' type='text/css'>
+    <!-- Bootstrap styles -->
 
-<form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_page') }}">
-    {{ form.csrf_token }}
-    {{ form.example }}
-    {{ form.audio }}
-    <input type="submit" value="Go">
-</form>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/boostrap.css') }}">
+    <!-- Font Awesome styles (icons) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font_awesome.css') }}">
+    <!-- Main Template styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- IE 8 Fallback -->
+    <!--[if lt IE 9]>
+	<link rel="stylesheet" type="text/css" href="/static/css/ie.css" />
+<![endif]-->
+
+    <!-- Your custom styles (blank file) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mystyles.css') }}">
+
+
+</head>
+
+<body>
+  <div class="global-wrap">
+    <header class="main">
+
+    </header>
+<div class="gap"></div>
+<div class="gap"></div>
+
+  <!-- LOGIN REGISTER LINKS CONTENT -->
+  <!-- <div id="login-dialog" class="mfp-with-anim mfp-hide mfp-dialog clearfix">
+      <i class="fa fa-sign-in dialog-icon"></i>
+      <h3>Hiphy Video</h3>
+      <h5>Let us know where to send your Hiphy!</h5>
+      <form class="dialog-form" action="#" method="post">
+          <div class="form-group">
+              <label>E-mail</label>
+              <input name="url" type="hidden" value="{{content_folder}}/{{content_key}}">
+              <input name="email" type="text" placeholder="email@domain.com" class="form-control">
+          </div>
+
+          <div class="form-group" style="text-align: center;">
+          <input id="emailsubmit" type="submit" value="Submit" class="btn btn-primary">
+        </div>
+      </form>
+
+  </div> -->
+
+
+
+
+
+
+        <div class="container">
+            <div class="row">
+                <div class="col">
+
+                    <div class="row">
+                        <!-- <div class="col-md-7"> -->
+
+
+
+
+                                <!-- <img src="/static/img/800x600.png" alt="Image Alternative text" title="AMaze" />
+                                <img src="/static/img/800x600.png" alt="Image Alternative text" title="Urbex Esch/Lux with Laney and Laaaaag" />
+                                <img src="/static/img/800x600.png" alt="Image Alternative text" title="Food is Pride" /> -->
+
+                        <!-- </div> -->
+                        <div class="col-md-5" style="margin-left: auto;margin-right: auto;float: inherit; text-align: center;">
+                            <div class="product-info box">
+                                <!-- <ul class="icon-group icon-list-rating text-color" title="4.5/5 rating">
+                                    <li><i class="fa fa-star"></i>
+                                    </li>
+                                    <li><i class="fa fa-star"></i>
+                                    </li>
+                                    <li><i class="fa fa-star"></i>
+                                    </li>
+                                    <li><i class="fa fa-star"></i>
+                                    </li>
+                                    <li><i class="fa fa-star-half-empty"></i>
+                                    </li>
+                                </ul>	<small><a href="#" class="text-muted">based on 8 reviews</a></small> -->
+                                <h3 class="product-info-price" style="text-align: center;">Create a Hiphy!</h3>
+                                <!-- <p class="product-info-price" style="font-size: 30px;text-align: center;">{{type}}</p> -->
+                                <p class="text-smaller text-muted">Just upload some pictures, upload a song, and let the Hiphy magic begin!</p>
+
+                                <!-- <ul class="icon-list list-space product-info-list">
+                                    <li><i class="fa fa-check"></i>Maecenas montes</li>
+                                    <li><i class="fa fa-check"></i>Nulla ullamcorper</li>
+                                    <li><i class="fa fa-check"></i>Ac curabitur</li>
+                                    <li><i class="fa fa-check"></i>Quis quis</li>
+                                    <li><i class="fa fa-check"></i>Ut senectus</li>
+                                </ul> -->
+                                <hr>
+                                <ul class="list-inline" style="text-align:center;">
+                                  <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_page') }}">
+                                      {{ form.csrf_token }}
+
+                                      <div style="margin: 10px;">
+                                        <label style="float: left;padding-right: 20px; clear: left;">Pictures</label>
+                                      {{ form.example }}
+                                    </div>
+
+                                    <div style="margin: 10px;">
+                                        <label style="float: left;padding-right: 20px; clear: left;">Song</label>
+                                      {{ form.audio }}
+
+                                      <input type="submit" value="Make Hiphy!" style="margin-top: 20px;">
+                                    </div>
+                                  </form>
+
+                                </ul>
+                                {% with messages = get_flashed_messages() %}
+                                    {% if messages %}
+                                        <ul class=flashes>
+                                            {% for message in messages %}
+                                                <li>{{ message }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gap"></div>
+
+
+                </div>
+            </div>
+            </div>
+<footer class="main">
+<iframe id="my_iframe" style="display:none;"></iframe>
+</footer>
+
+        <!-- //////////////////////////////////
+	//////////////END PAGE CONTENT/////////
+	////////////////////////////////////-->
+
+
+
+        <!-- //////////////////////////////////
+	//////////////MAIN FOOTER//////////////
+	////////////////////////////////////-->
+
+
+        <!-- //////////////////////////////////
+	//////////////END MAIN  FOOTER/////////
+	////////////////////////////////////-->
+
+
+
+        <!-- Scripts queries -->
+
+        <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+        <script>
+//         $('#download').on('click', function() {
+//   $('<form></form>')
+//     .attr(
+//       'action',
+//       'https://s3.amazonaws.com/livebooth/{{content_folder}}/{{content_key}}'
+//     )
+//     .appendTo('body')
+//     .submit()
+//     .remove()
+//   var a = document.createElement('a')
+//   a.href =
+//     'https://s3.amazonaws.com/livebooth/{{content_folder}}/{{content_key}}'
+//   a.download =
+//     'https://s3.amazonaws.com/livebooth/{{content_folder}}/{{content_key}}'
+//   document.body.appendChild(a)
+//   a.click()
+//   document.body.removeChild(a)
+// })
+// $('#emailsubmit').click(function(e) {
+//   var data = JSON.stringify({
+//     email: $('#emailaddy').val(),
+//     url: 'https://s3.amazonaws.com/livebooth/{{content_folder}}/{{content_key}}'
+//   })
+//   // $.post(
+//   //   'https://khr9zw6byi.execute-api.us-west-2.amazonaws.com/dev/v1/convert',
+//   //   data,
+//   //   function(data, status) {
+//   //     console.log('Data: ' + data + '\nStatus: ' + status)
+//   //   }
+//   // )
+//   $.ajax({
+//     url: '/convert',
+//     type: 'POST',
+//     dataType: 'json',
+//     data: data,
+//     success: function(data, textStatus, jqXHR) {
+//       console.log('success')
+//     },
+//     error: function(jqXHR, textStatus, errorThrown) {
+//       console.log(errorThrown)
+//       console.log(textStatus)
+//     }
+//   })
+// })
+</script>
+        <script src="{{ url_for('static', filename='js/boostrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/countdown.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/flexnav.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/magnific.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/tweet.min.js') }}"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+        <script src="{{ url_for('static', filename='js/fitvids.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/mail.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/ionrangeslider.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/icheck.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/fotorama.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/card-payment.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/owl-carousel.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/masonry.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/nicescroll.js') }}"></script>
+
+        <!-- Custom scripts -->
+        <!-- <script src="{{ url_for('static', filename='js/custom.js') }}"></script> -->
+    </div>
+</body>
+</html>

@@ -163,7 +163,7 @@ class UploadForm(FlaskForm):
         )
 
 
-@app.route('/upload', methods=['POST', 'GET'])
+@app.route('/', methods=['POST', 'GET'])
 def upload_page():
     print("upload page")
     form = UploadForm()
@@ -192,15 +192,15 @@ def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
-@app.route('/')
-def audio():
-    song = download_song(song_url)
-    beats = get_beats(song)
-    instructions = create_instructions(beats, images_url)
-    send_to_ffmpeg(instructions)
-    response = build_response({'beats': beats}, 200)
-
-    return response
+# @app.route('/')
+# def audio():
+#     song = download_song(song_url)
+#     beats = get_beats(song)
+#     instructions = create_instructions(beats, images_url)
+#     send_to_ffmpeg(instructions)
+#     response = build_response({'beats': beats}, 200)
+#
+#     return response
 
 
 
