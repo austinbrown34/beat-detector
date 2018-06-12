@@ -1,4 +1,4 @@
-aubio==0.4.7a0+967e4041
+aubio==0.4.6
 boto==2.48.0
 boto3==1.7.35
 botocore==1.10.35
