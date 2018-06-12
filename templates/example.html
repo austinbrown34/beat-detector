@@ -26,6 +26,7 @@
 
     <!-- Your custom styles (blank file) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mystyles.css') }}">
+    {{ dropzone.load_css() }}
 
 
 </head>
@@ -93,7 +94,7 @@
                                 </ul>	<small><a href="#" class="text-muted">based on 8 reviews</a></small> -->
                                 <h3 class="product-info-price" style="text-align: center;">Create a Hiphy!</h3>
                                 <!-- <p class="product-info-price" style="font-size: 30px;text-align: center;">{{type}}</p> -->
-                                <p class="text-smaller text-muted">Just upload some pictures, upload a song, and let the Hiphy magic begin!</p>
+                                <p class="text-smaller text-muted">Just upload some pictures, upload a song, and let the magic begin!</p>
 
                                 <!-- <ul class="icon-list list-space product-info-list">
                                     <li><i class="fa fa-check"></i>Maecenas montes</li>
@@ -104,22 +105,9 @@
                                 </ul> -->
                                 <hr>
                                 <ul class="list-inline" style="text-align:center;">
-                                  <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_page') }}">
-                                      {{ form.csrf_token }}
 
-                                      <div style="margin: 10px;">
-                                        <label style="float: left;padding-right: 20px; clear: left;">Pictures</label>
-                                      {{ form.example }}
-                                    </div>
-
-                                    <div style="margin: 10px;">
-                                        <label style="float: left;padding-right: 20px; clear: left;">Song</label>
-                                      {{ form.audio }}
-
-                                      <input type="submit" value="Make Hiphy!" style="margin-top: 20px;">
-                                    </div>
-                                  </form>
-
+                                  {{ dropzone.create(action_view='upload') }}
+                                  <button style="margin-top: 20px;" id="submit-all">Upload and Create</button>
                                 </ul>
                                 {% with messages = get_flashed_messages() %}
                                     {% if messages %}
@@ -208,6 +196,8 @@
 //     }
 //   })
 // })
+
+
 </script>
         <script src="{{ url_for('static', filename='js/boostrap.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/countdown.min.js') }}"></script>
@@ -224,7 +214,31 @@
         <script src="{{ url_for('static', filename='js/owl-carousel.js') }}"></script>
         <script src="{{ url_for('static', filename='js/masonry.js') }}"></script>
         <script src="{{ url_for('static', filename='js/nicescroll.js') }}"></script>
+        {{ dropzone.load_js() }}
+        <script>
+        Dropzone.options.myDropzone = {
+  // Prevents Dropzone from uploading dropped files immediately
+  autoProcessQueue: false,
+  parallelUploads: 30,
+  uploadMultiple: true,
+  paramName: 'file',
+  dictDefaultMessage: 'Drop images and a song here to upload!',
+  init: function() {
+    var submitButton = document.querySelector('#submit-all')
+    myDropzone = this // closure
 
+    submitButton.addEventListener('click', function() {
+      myDropzone.processQueue() // Tell Dropzone to process all queued files.
+    })
+
+    // You might want to show the submit button only when
+    // files are dropped here:
+    this.on('addedfile', function() {
+      // Show submit button here and/or inform user to click it.
+    })
+  }
+}
+</script>
         <!-- Custom scripts -->
         <!-- <script src="{{ url_for('static', filename='js/custom.js') }}"></script> -->
     </div>

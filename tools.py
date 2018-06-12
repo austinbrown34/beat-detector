@@ -71,7 +71,7 @@ def s3_upload(source_file, upload_dir=None, acl='public-read'):
     if upload_dir is None:
         upload_dir = app.config["S3_AUDIO_UPLOAD_DIRECTORY"]
 
-    source_filename = secure_filename(source_file.data.filename)
+    source_filename = secure_filename(source_file.filename)
     source_extension = os.path.splitext(source_filename)[1]
 
     destination_filename = uuid4().hex + source_extension
@@ -80,7 +80,7 @@ def s3_upload(source_file, upload_dir=None, acl='public-read'):
     b = conn.get_bucket(app.config["S3_BUCKET"])
 
     sml = b.new_key("/".join([upload_dir, destination_filename]))
-    sml.set_contents_from_string(source_file.data.read())
+    sml.set_contents_from_string(source_file.read())
     sml.set_acl(acl)
     # session = boto3.Session(
     #     aws_access_key_id=os.environ.get('AWS_SERVER_PUBLIC_KEY'),

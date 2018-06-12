@@ -2,6 +2,7 @@ from flask import Flask, jsonify, make_response, request, abort, Response, rende
 from flask_wtf import FlaskForm
 from werkzeug import secure_filename
 from flask_wtf.file import FileField
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from tools import s3_uploads, s3_upload
 import json
 import os
@@ -14,11 +15,13 @@ import boto3
 import botocore
 import requests
 from uuid import uuid4
+from flask_dropzone import Dropzone
 
 
 app = Flask(__name__)
 app.config.from_object('config')
-
+dropzone = Dropzone(app)
+csrf = CSRFProtect(app)
 
 win_s = 512                 # fft size
 hop_s = win_s // 2          # hop size
@@ -120,8 +123,6 @@ def get_beats(path, params=None):
         path: path to the file
         param: dictionary of parameters
     """
-    if 'ffmpeg' not in os.environ['LD_LIBRARY_PATH']:
-        os.environ['LD_LIBRARY_PATH'] += '/app/vendor/ffmpeg'
     if params is None:
         params = {}
     samplerate, win_s, hop_s = 44100, 1024, 512
@@ -176,29 +177,68 @@ class UploadForm(FlaskForm):
         )
 
 
+@app.errorhandler(CSRFError)
+def csrf_error(e):
+    return e.description, 400
+
+
 @app.route('/', methods=['POST', 'GET'])
-def upload_page():
-    print("upload page")
-    form = UploadForm()
-    print("about to validate")
-    if form.validate_on_submit():
-        print("form validated")
-        print(form.example.data)
-        print(request.files.getlist("example"))
-        # print(request.FILES[form.example].read())
+def upload():
+    if request.method == 'POST':
         hex = uuid4().hex
-        out = s3_upload(form.audio, '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex))
-        outputs = s3_uploads(request.files.getlist("example"), '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
-        flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=out))
-        for output in outputs:
-            flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
+        # print (request.files)
+        # print (request.files.getlist('file'))
+        images = []
+        for key, f in request.files.items():
+            if key.startswith('file'):
+                print (f.filename)
+                if f.filename.endswith('.wav') or f.filename.endswith('.mp3'):
+                    out = s3_upload(f, '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex))
+                else:
+                    images.append(f)
+
+        outputs = s3_uploads(images, '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
         song_url = 'https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex), out)
         song = download_song(song_url)
         beats = get_beats(song)
         images_url = 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
         instructions = create_instructions(beats, images_url)
         send_to_ffmpeg(images_url, song_url, instructions)
-    return render_template('example.html', form=form)
+
+    # out = s3_upload(form.audio, '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex))
+    # outputs = s3_uploads(request.files.getlist("example"), '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
+    # flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=out))
+    # for output in outputs:
+    #     flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
+    # song_url = 'https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex), out)
+    # song = download_song(song_url)
+    # beats = get_beats(song)
+    # images_url = 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
+    # instructions = create_instructions(beats, images_url)
+    # send_to_ffmpeg(images_url, song_url, instructions)
+
+
+    # print("upload page")
+    # form = UploadForm()
+    # print("about to validate")
+    # if form.validate_on_submit():
+    #     print("form validated")
+    #     print(form.example.data)
+    #     print(request.files.getlist("example"))
+    #     # print(request.FILES[form.example].read())
+    #     hex = uuid4().hex
+    #     out = s3_upload(form.audio, '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex))
+    #     outputs = s3_uploads(request.files.getlist("example"), '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
+    #     flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=out))
+    #     for output in outputs:
+    #         flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
+    #     song_url = 'https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex), out)
+    #     song = download_song(song_url)
+    #     beats = get_beats(song)
+    #     images_url = 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
+    #     instructions = create_instructions(beats, images_url)
+    #     send_to_ffmpeg(images_url, song_url, instructions)
+    return render_template('example.html')
 
 
 @app.errorhandler(404)
