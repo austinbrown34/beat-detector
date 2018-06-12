@@ -51,6 +51,16 @@ def download_song(song_url):
             print("The object does not exist.")
         else:
             raise
+    if not file_name.endswith('.wav'):
+        new_file_name = file_name.split('.')[0] + '.wav'
+        args = [
+            'ffmpeg',
+            '-i',
+            file_name,
+            new_file_name
+        ]
+        subprocess.call(args)
+        file_name = new_file_name
     return file_name
 
 
@@ -110,6 +120,8 @@ def get_beats(path, params=None):
         path: path to the file
         param: dictionary of parameters
     """
+    if 'ffmpeg' not in os.environ['LD_LIBRARY_PATH']:
+        os.environ['LD_LIBRARY_PATH'] += '/app/vendor/ffmpeg'
     if params is None:
         params = {}
     samplerate, win_s, hop_s = 44100, 1024, 512
