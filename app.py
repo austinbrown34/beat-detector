@@ -13,6 +13,7 @@ from pydub import AudioSegment
 import boto3
 import botocore
 import requests
+from uuid import uuid4
 
 
 app = Flask(__name__)
@@ -173,15 +174,16 @@ def upload_page():
         print(form.example.data)
         print(request.files.getlist("example"))
         # print(request.FILES[form.example].read())
-        out = s3_upload(form.audio)
-        outputs = s3_uploads(request.files.getlist("example"))
+        hex = uuid4().hex
+        out = s3_upload(form.audio, '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex))
+        outputs = s3_uploads(request.files.getlist("example"), '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
         flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=out))
         for output in outputs:
             flash('{src} uploaded to S3 as {dst}'.format(src=form.example.data.filename, dst=output))
-        song_url = 'https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], app.config["S3_AUDIO_UPLOAD_DIRECTORY"], out)
+        song_url = 'https://s3.amazonaws.com/{}/{}/{}'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex), out)
         song = download_song(song_url)
         beats = get_beats(song)
-        images_url = 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], app.config["S3_UPLOAD_DIRECTORY"])
+        images_url = 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
         instructions = create_instructions(beats, images_url)
         send_to_ffmpeg(images_url, song_url, instructions)
     return render_template('example.html', form=form)
