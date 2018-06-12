@@ -190,6 +190,8 @@ def upload():
         # print (request.files)
         # print (request.files.getlist('file'))
         email = request.form['email']
+        print ('email:')
+        print (email)
         images = []
         for key, f in request.files.items():
             if key.startswith('file'):

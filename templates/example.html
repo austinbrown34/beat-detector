@@ -110,7 +110,7 @@
                                   <div class="form-group">
                                       <label style="float: left;padding-top: 10px;padding-right: 20px; clear: left;">E-mail</label>
 
-                                      <input name="email" type="text" placeholder="email@domain.com" class="form-control">
+                                      <input id="email" name="email" type="text" placeholder="email@domain.com" class="form-control">
                                   </div>
                                   <button style="margin-top: 20px;" id="submit-all">Upload, Create, and Email!</button>
                                 </ul>
@@ -242,6 +242,7 @@
       // Show submit button here and/or inform user to click it.
     })
     this.on('sending', function(file, xhr, formData) {
+      console.log()
       formData.append('email', $('#email').val()) // Append all the additional input data of your form here!
     })
   }
