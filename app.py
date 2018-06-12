@@ -107,12 +107,13 @@ def create_instructions(beats, images_url):
     return instructions
 
 
-def send_to_ffmpeg(images_url, song_url, instructions):
+def send_to_ffmpeg(images_url, song_url, instructions, email):
 
     values = {
         "images_s3_url": images_url,
         "song_s3_url": song_url,
-        "instructions": instructions
+        "instructions": instructions,
+        "email": email
     }
 
     requests.post(ffmpeg_url, json=values)
@@ -188,6 +189,7 @@ def upload():
         hex = uuid4().hex
         # print (request.files)
         # print (request.files.getlist('file'))
+        email = request.form['email']
         images = []
         for key, f in request.files.items():
             if key.startswith('file'):
@@ -203,7 +205,7 @@ def upload():
         beats = get_beats(song)
         images_url = 'https://s3.amazonaws.com/{}/{}/'.format(app.config["S3_BUCKET"], '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
         instructions = create_instructions(beats, images_url)
-        send_to_ffmpeg(images_url, song_url, instructions)
+        send_to_ffmpeg(images_url, song_url, instructions, email)
 
     # out = s3_upload(form.audio, '{}/{}'.format(app.config["S3_AUDIO_UPLOAD_DIRECTORY"], hex))
     # outputs = s3_uploads(request.files.getlist("example"), '{}/{}'.format(app.config["S3_UPLOAD_DIRECTORY"], hex))
